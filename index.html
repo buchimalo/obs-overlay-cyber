@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaming HUD Overlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- SNSアイコンSVG -->
+    <svg style="display: none;">
+        <symbol id="icon-x" viewBox="0 0 24 24"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></symbol>
+        <symbol id="icon-insta" viewBox="0 0 24 24"><path fill="currentColor" d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m4.4 3a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m6-4a1 1 0 0 1 1 1 1 1 0 0 1-1 1 1 1 0 0 1-1-1 1 1 0 0 1 1-1Z"/></symbol>
+        <symbol id="icon-tiktok" viewBox="0 0 24 24"><path fill="currentColor" d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></symbol>
+    </svg>
+</head>
+<body>
+
+    <div id="settings-btn">⚙️ SETUP</div>
+
+    <div id="control-panel" class="panel-hidden">
+        <div class="panel-header">
+            <h3>SYSTEM CONTROL</h3>
+            <button id="close-btn">×</button>
+        </div>
+
+        <div class="panel-content">
+            
+            <!-- [0] カラー設定 -->
+            <div class="setting-group">
+                <div class="section-title">COLOR THEME</div>
+                <div class="color-picker-row">
+                    <button class="color-btn" data-color="cyan" style="background:#0ff;"></button>
+                    <button class="color-btn" data-color="red" style="background:#ff3333;"></button>
+                    <button class="color-btn" data-color="green" style="background:#33ff33;"></button>
+                    <button class="color-btn" data-color="purple" style="background:#cc33ff;"></button>
+                    <button class="color-btn" data-color="orange" style="background:#ffaa00;"></button>
+                </div>
+            </div>
+
+            <!-- [A] 時計設定 -->
+            <div class="setting-group">
+                <label><input type="checkbox" data-target="clock-module"> SYSTEM TIME (時計)</label>
+                <div class="slider-row">
+                    <span class="label-text">ZOOM</span>
+                    <input type="range" id="clock-scale" min="0.5" max="2.0" step="0.1" value="1.0">
+                    <span id="clock-scale-val" class="val-text">1.0</span>
+                </div>
+            </div>
+
+            <!-- [B] ログ設定 -->
+            <div class="setting-group">
+                <label><input type="checkbox" data-target="log-module"> COMM LOG (ログ)</label>
+                <input type="text" id="comment-url-input" placeholder="OneComme URL..." class="text-input">
+                <div class="slider-row">
+                    <span class="label-text">TEXT</span>
+                    <input type="range" id="log-scale" min="0.5" max="1.5" step="0.1" value="1.0">
+                    <span id="log-scale-val" class="val-text">1.0</span>
+                </div>
+                <div class="sub-group">
+                    <div class="section-title">FRAME SIZE (枠の形)</div>
+                    <div class="slider-row">
+                        <span class="label-text">W</span>
+                        <input type="range" id="log-width" min="200" max="800" step="10" value="300">
+                        <span id="log-width-val" class="val-text">300</span>
+                    </div>
+                    <div class="slider-row">
+                        <span class="label-text">H</span>
+                        <input type="range" id="log-height" min="100" max="800" step="10" value="400">
+                        <span id="log-height-val" class="val-text">400</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [C] 波形設定 -->
+            <div class="setting-group">
+                <label><input type="checkbox" data-target="wave-module"> SENSOR (波形)</label>
+                <div class="section-title">AUDIO DEVICE:</div>
+                <select id="audio-device-select" class="text-input">
+                    <option value="">Default (既定)</option>
+                </select>
+                <div class="note-text">※OBSと同じマイクを選択してください</div>
+                <div class="slider-row">
+                    <span class="label-text">ZOOM</span>
+                    <input type="range" id="wave-scale" min="0.5" max="2.0" step="0.1" value="1.0">
+                    <span id="wave-scale-val" class="val-text">1.0</span>
+                </div>
+            </div>
+
+            <!-- [D] 一言欄設定 -->
+            <div class="setting-group">
+                <label><input type="checkbox" data-target="ticker-module"> MESSAGE (一言)</label>
+                <input type="text" id="ticker-text-input" placeholder="メッセージを入力..." class="text-input">
+                <div class="slider-row">
+                    <span class="label-text">ZOOM</span>
+                    <input type="range" id="ticker-scale" min="0.5" max="2.0" step="0.1" value="1.0">
+                    <span id="ticker-scale-val" class="val-text">1.0</span>
+                </div>
+                <div class="slider-row">
+                    <span class="label-text">WIDTH</span>
+                    <!-- 最大値を1920に増やしました -->
+                    <input type="range" id="ticker-width" min="200" max="1920" step="10" value="600">
+                    <span id="ticker-width-val" class="val-text">600</span>
+                </div>
+            </div>
+
+            <!-- [E] SNS設定 -->
+            <div class="setting-group">
+                <label><input type="checkbox" data-target="social-module"> SOCIAL (SNS)</label>
+                <div style="margin-top:8px;">
+                    <!-- X (Twitter) -->
+                    <div class="sns-input-row">
+                        <span class="sns-label">
+                            <svg class="panel-icon"><use href="#icon-x"></use></svg>
+                        </span>
+                        <input type="text" id="sns-x-input" placeholder="@ID" class="text-input sns-input">
+                    </div>
+                    <!-- Instagram -->
+                    <div class="sns-input-row">
+                        <span class="sns-label">
+                            <svg class="panel-icon"><use href="#icon-insta"></use></svg>
+                        </span>
+                        <input type="text" id="sns-insta-input" placeholder="@ID" class="text-input sns-input">
+                    </div>
+                    <!-- TikTok -->
+                    <div class="sns-input-row">
+                        <span class="sns-label">
+                            <svg class="panel-icon"><use href="#icon-tiktok"></use></svg>
+                        </span>
+                        <input type="text" id="sns-tiktok-input" placeholder="@ID" class="text-input sns-input">
+                    </div>
+                </div>
+                <div class="slider-row">
+                    <span class="label-text">ZOOM</span>
+                    <input type="range" id="social-scale" min="0.5" max="2.0" step="0.1" value="1.0">
+                    <span id="social-scale-val" class="val-text">1.0</span>
+                </div>
+            </div>
+
+            <!-- 位置リセット -->
+            <div class="setting-group" style="text-align:center; padding-top:15px; border:none;">
+                <button id="reset-pos-btn">RESET POSITION (位置リセット)</button>
+            </div>
+        </div>
+        <div class="footer-note">[OBS操作] 右クリック →「対話 (Interact)」</div>
+    </div>
+
+    <!-- HUD本体 -->
+    <div class="hud-container">
+        <!-- (1) 波形 -->
+        <div id="wave-module" class="hud-box">
+            <div class="label">AUDIO SENSOR</div>
+            <div class="wave-container"></div>
+        </div>
+        <!-- (2) ログ -->
+        <div id="log-module" class="hud-box">
+            <div class="label">COMMUNICATION LOG</div>
+            <iframe id="chat-frame" src="" frameborder="0"></iframe>
+            <div id="log-placeholder">NO SIGNAL...<br>PLEASE SET URL</div>
+        </div>
+        <!-- (3) 時計 -->
+        <div id="clock-module" class="hud-box">
+            <div class="label">LOCAL TIME</div>
+            <div id="time-display">00:00:00</div>
+            <div id="ms-display">.000</div>
+        </div>
+        <!-- (4) 一言欄 -->
+        <div id="ticker-module" class="hud-box">
+            <div class="label">MESSAGE / NEWS</div>
+            <div class="ticker-container">
+                <div class="ticker-content" id="ticker-display">Welcome to my stream!</div>
+            </div>
+        </div>
+        <!-- (5) SNS -->
+        <div id="social-module" class="hud-box">
+            <div class="label">SOCIAL LINKS</div>
+            <div id="social-list"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

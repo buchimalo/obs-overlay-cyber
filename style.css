@@ -1,0 +1,255 @@
+@charset "UTF-8";
+
+/* ============================================
+   1. 色の定義 (CSS変数)
+   ============================================ */
+:root {
+    --main-color: #0ff;
+    --main-rgb: 0, 255, 255;
+    --hue-rotate: 130deg;
+}
+body.theme-red { --main-color: #ff3333; --main-rgb: 255, 51, 51; --hue-rotate: 0deg; }
+body.theme-green { --main-color: #33ff33; --main-rgb: 51, 255, 51; --hue-rotate: 240deg; }
+body.theme-purple { --main-color: #cc33ff; --main-rgb: 204, 51, 255; --hue-rotate: 200deg; }
+body.theme-orange { --main-color: #ffaa00; --main-rgb: 255, 170, 0; --hue-rotate: -30deg; }
+
+/* ============================================
+   2. 基本設定
+   ============================================ */
+body {
+    margin: 0; padding: 0;
+    background-color: transparent;
+    color: var(--main-color);
+    font-family: 'Orbitron', sans-serif;
+    overflow: hidden;
+    height: 100vh; width: 100vw;
+}
+body::after {
+    content: " "; display: block; position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+    background-size: 100% 4px;
+    z-index: 500; pointer-events: none;
+}
+
+/* ============================================
+   3. HUDコンテナ & 共通デザイン
+   ============================================ */
+.hud-container {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    animation: screen-flicker 5s infinite;
+}
+@keyframes screen-flicker {
+    0% { opacity: 0.97; } 5% { opacity: 1; } 10% { opacity: 0.98; } 100% { opacity: 1; }
+}
+
+.hud-box {
+    position: absolute;
+    background: rgba(var(--main-rgb), 0.05);
+    border: 1px solid var(--main-color);
+    padding: 10px;
+    box-shadow: 0 0 5px rgba(var(--main-rgb), 0.5), inset 0 0 15px rgba(var(--main-rgb), 0.1);
+    backdrop-filter: blur(2px);
+    transition: width 0.1s, height 0.1s, transform 0.1s;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+    
+    /* ▼操作・カーソル関連の強化修正 */
+    pointer-events: auto; 
+    user-select: none;
+    cursor: pointer !important; /* 指マークに変更 */
+    z-index: 600;               /* 走査線より手前へ */
+}
+
+/* 追加：マウスを乗せた時に明るく光らせる（カーソルが変わらなくても分かるように） */
+.hud-box:hover {
+    background: rgba(var(--main-rgb), 0.2);
+    border-color: #fff;
+    box-shadow: 0 0 20px rgba(var(--main-rgb), 0.8);
+    z-index: 700; /* ホバー中はさらに手前に */
+}
+
+/* ボックス内の全要素にもカーソル適用 */
+.hud-box * {
+    cursor: pointer !important;
+}
+
+.hud-box.dragging { opacity: 0.7; border-color: #fff; z-index: 9999 !important; transition: none; }
+.hidden { opacity: 0 !important; pointer-events: none; }
+
+.label {
+    font-size: 10px; background: var(--main-color); color: #000;
+    padding: 2px 5px; margin-bottom: 5px; display: inline-block; font-weight: bold;
+    text-shadow: 0 0 5px rgba(var(--main-rgb), 0.8);
+    pointer-events: none; transform-origin: top left; white-space: nowrap;
+}
+
+/* ============================================
+   4. 各モジュールの配置 & スタイル
+   ============================================ */
+/* [左上] 一言欄 (Ticker) */
+#ticker-module { 
+    top: 80px; 
+    left: 30px; 
+    width: 600px; 
+    height: 50px; 
+    transform-origin: top left; 
+    overflow: hidden; 
+}
+.ticker-container { width: 100%; height: 100%; display: flex; align-items: center; overflow: hidden; pointer-events: none; }
+.ticker-content { 
+    font-size: 18px; 
+    line-height: 50px; 
+    white-space: nowrap; 
+    /* アニメーション復活（不要なら none に） */
+    animation: marquee 10s linear infinite; 
+    text-shadow: 0 0 5px var(--main-color); 
+    padding-left: 100%;
+    position: relative;
+    top: -10px;
+}
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+
+/* [左上・一言の下] SNS */
+#social-module { 
+    top: 150px; 
+    left: 30px; 
+    width: auto; 
+    min-width: 150px; 
+    transform-origin: top left; 
+}
+#social-list { display: flex; gap: 15px; align-items: center; justify-content: flex-start; pointer-events: none; }
+.social-item { display: flex; align-items: center; gap: 5px; font-size: 14px; text-shadow: 0 0 5px var(--main-color); }
+.social-icon { width: 20px; height: 20px; color: var(--main-color); }
+
+/* [左下] ログ */
+#log-module { 
+    bottom: 30px; 
+    left: 30px; 
+    width: 300px; 
+    height: 400px; 
+    overflow: hidden; 
+    transform-origin: bottom left; 
+}
+#chat-frame {
+    width: 100%; height: 100%; border: none; position: relative; z-index: 2;
+    transform-origin: top left; transition: transform 0.1s ease;
+    filter: sepia(1) hue-rotate(var(--hue-rotate)) saturate(3) contrast(1.2);
+    pointer-events: none;
+}
+#log-placeholder { pointer-events: none; position:absolute; top:40%; left:0; width:100%; text-align:center; font-size:10px; color:#aaa; }
+
+/* [右上] 波形 */
+#wave-module { 
+    top: 30px; 
+    right: 30px; 
+    width: 200px; 
+    height: 60px; 
+    transform-origin: top right; 
+}
+.wave-container { height: 30px; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.wave-bar { display: inline-block; width: 6px; height: 100%; background: var(--main-color); margin-right: 2px; transition: height 0.05s ease, background-color 0.1s; }
+.wave-bar.warning { background: #ff0000 !important; box-shadow: 0 0 10px #ff0000; }
+
+/* [右下] 時計 */
+#clock-module { 
+    bottom: 30px; 
+    right: 30px; 
+    text-align: right; 
+    width: 200px; 
+    transform-origin: bottom right; 
+}
+#time-display { font-size: 32px; font-weight: 700; letter-spacing: 2px; text-shadow: 0 0 5px var(--main-color); }
+#ms-display { font-size: 16px; text-shadow: 0 0 5px var(--main-color); }
+
+/* ============================================
+   5. 設定パネル (Control Panel)
+   ============================================ */
+#settings-btn {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(0, 0, 0, 0.5); border: 1px solid var(--main-color); color: var(--main-color);
+    padding: 8px 12px; cursor: pointer; z-index: 10000; font-size: 14px; font-weight: bold;
+    opacity: 0.5; transition: opacity 0.3s; pointer-events: auto;
+}
+#settings-btn:hover { opacity: 1; }
+
+#control-panel {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 480px; 
+    max-height: 90vh; overflow-y: auto;
+    background: rgba(0, 0, 0, 0.95);
+    border: 2px solid var(--main-color);
+    padding: 25px; 
+    z-index: 10001;
+    color: #fff; font-family: sans-serif;
+    box-shadow: 0 0 30px rgba(var(--main-rgb), 0.6);
+    pointer-events: auto; transition: all 0.3s ease;
+}
+#control-panel.panel-hidden { opacity: 0; visibility: hidden; transform: translate(-50%, -60%); }
+
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #444; padding-bottom: 10px; }
+#control-panel h3 { margin: 0; font-size: 20px; color: var(--main-color); letter-spacing: 1px; }
+#close-btn { background: none; border: none; color: #fff; font-size: 28px; cursor: pointer; }
+
+/* 設定グループ */
+.setting-group { margin-bottom: 20px; border-bottom: 1px dashed #444; padding-bottom: 15px; }
+.setting-group:last-child { border-bottom: none; }
+.setting-group label { display: block; cursor: pointer; font-size: 15px; font-weight: bold; margin-bottom: 8px; }
+.setting-group label input { margin-right: 10px; transform: scale(1.3); }
+
+.section-title { font-size: 12px; color: #aaa; margin-bottom: 6px; font-weight: bold; }
+.note-text { font-size: 11px; color: #ff5555; margin-bottom: 8px; }
+
+/* 入力フォーム類 */
+.text-input { width: 100%; box-sizing: border-box; background: #111; border: 1px solid #666; color: #fff; padding: 8px; margin: 5px 0 12px; font-size: 13px; }
+.text-input:focus { border-color: var(--main-color) !important; outline: none; }
+
+/* スライダー行 */
+.slider-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-top: 8px; color: #ddd; }
+.label-text { width: 55px; font-weight: bold; }
+.val-text { width: 40px; text-align: right; font-family: monospace; }
+.slider-row input[type="range"] { flex: 1; margin: 0 15px; cursor: pointer; }
+
+/* サブグループ */
+.sub-group { border-top: 1px dotted #555; padding-top: 12px; margin-top: 12px; }
+
+/* カラーピッカー */
+.color-picker-row { display: flex; gap: 15px; padding: 5px 0; }
+.color-btn { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #666; cursor: pointer; transition: transform 0.2s; }
+.color-btn:hover { transform: scale(1.1); }
+.color-btn.active { border-color: #fff; transform: scale(1.2); box-shadow: 0 0 10px #fff; }
+
+/* SNS入力行 */
+.sns-input-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.sns-label { width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; color: #aaa; }
+.panel-icon { width: 18px; height: 18px; fill: currentColor; }
+.sns-input { margin: 0; flex: 1; }
+
+/* リセットボタン */
+#reset-pos-btn { background: #333; border: 1px solid #666; color: #eee; padding: 10px 24px; cursor: pointer; font-size: 13px; border-radius: 4px; transition: background 0.2s; }
+#reset-pos-btn:hover { background: #555; }
+.footer-note { font-size: 12px; color: #888; margin-top: 15px; text-align: center; }
+
+/* スクロールバー */
+#control-panel::-webkit-scrollbar { width: 8px; }
+#control-panel::-webkit-scrollbar-track { background: #111; }
+#control-panel::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+
+/* ============================================
+   6. 透かし (Watermark)
+   ============================================ */
+#watermark {
+    position: fixed;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--main-color);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 9999;
+    text-shadow: 0 0 3px #000;
+    white-space: nowrap;
+}
