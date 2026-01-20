@@ -199,10 +199,11 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSocial();
 
     // ============================================
-    // 9. マイク波形（ハイブリッド版：シミュレーション付き）
+    // 9. マイク波形（Web版対応：デバイス選択機能付き）
     // ============================================
     const waveCont = document.querySelector('.wave-container');
     const waveChk = document.querySelector('input[data-target="wave-module"]');
+    const audioSel = document.getElementById('audio-device-select'); // 追加
     
     if(waveCont) {
         waveCont.innerHTML=''; 
@@ -217,15 +218,43 @@ document.addEventListener('DOMContentLoaded', () => {
         let aCtx=null, anl=null, src=null, ani=null;
         let isSimulation = false;
 
+        // ▼ マイク一覧を取得する関数
+        async function updateDeviceList() {
+            if(!audioSel) return;
+            // 現在の選択を保存
+            const currentVal = localStorage.getItem('audio-device') || "";
+            audioSel.innerHTML = '<option value="">Default (既定)</option>';
+            
+            try {
+                // マイク一覧を取得
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                devices.filter(d => d.kind === 'audioinput' && d.deviceId !== 'default').forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.deviceId;
+                    opt.text = d.label || `Mic ${audioSel.options.length}`;
+                    audioSel.appendChild(opt);
+                });
+                // 保存していた選択を復元
+                if(currentVal) audioSel.value = currentVal;
+            } catch(e) {
+                console.warn("Device enumeration failed", e);
+            }
+        }
+
         // ▼ 本物のマイク取得モード
         async function startAudio() {
             if(waveChk && !waveChk.checked) return;
             if(aCtx && aCtx.state === 'running') return;
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // 選択されたデバイスIDを取得
+                const devId = audioSel ? audioSel.value : "";
+                const constraints = { 
+                    audio: devId ? { deviceId: { exact: devId } } : true 
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 
-                // 成功したらシミュレーション停止
                 if(isSimulation) stopSimulation();
 
                 const AC = window.AudioContext || window.webkitAudioContext;
@@ -272,24 +301,12 @@ document.addEventListener('DOMContentLoaded', () => {
             function simFrame() {
                 if(!isSimulation) return;
                 ani = requestAnimationFrame(simFrame);
-                
-                const time = Date.now() * 0.003; // 時間経過（数字を小さくするともっとゆっくりになります）
-                
+                const time = Date.now() * 0.003;
                 for(let i=0; i<16; i++){
-                    // Math.sin を使って滑らかな波を作る (-1.0 〜 1.0)
-                    // i * 0.4 は波の細かさ
                     const wave = Math.sin(time + i * 0.4);
-                    
-                    // 高さに変換 (中心30%、振れ幅20% ＝ 10%〜50%の間を行き来する)
                     let pct = 30 + (wave * 20);
-                    
-                    // ほんの少しだけランダムな揺らぎを足して機械っぽさを消す
                     pct += Math.random() * 5;
-                    
                     bars[i].style.height = pct + '%';
-                    
-                    // シミュレーション中は赤色（Warning）をめったに出さない（落ち着かせる）
-                    // 波が高いときだけ、たまーに光る
                     if(pct > 45 && Math.random() > 0.98) bars[i].classList.add('warning');
                     else bars[i].classList.remove('warning');
                 }
@@ -317,12 +334,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 else stopAudio();
             });
         }
+        
+        // プルダウン変更時のイベント
+        if(audioSel) {
+            audioSel.addEventListener('change', () => {
+                localStorage.setItem('audio-device', audioSel.value);
+                // 変更したら再起動
+                stopAudio();
+                startAudio();
+            });
+            // 初回リスト取得
+            updateDeviceList();
+            // クリック時にも更新（新しいマイクを挿したとき用）
+            audioSel.addEventListener('mousedown', updateDeviceList);
+        }
 
         // クリックで再試行（制限なし）
         document.body.addEventListener('click', () => {
+            // Web版では権限確認ポップアップが出るので、リスト更新もここで行うとスムーズ
+            updateDeviceList();
+            
             if(waveChk && waveChk.checked) {
                 if(!aCtx) {
-                    // シミュレーション中でも本物を試す
                     startAudio();
                 } else if(aCtx.state === 'suspended') {
                     aCtx.resume();
@@ -330,7 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         
-        // 2秒後に自動開始試行
         setTimeout(() => {
             if(waveChk && waveChk.checked && !aCtx && !isSimulation) startSimulation();
         }, 2000);
